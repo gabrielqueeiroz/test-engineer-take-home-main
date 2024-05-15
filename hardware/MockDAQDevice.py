@@ -5,7 +5,7 @@ class MockDAQDevice:
         self.device_name = device_name
         self.digital_input_channels = {}
         self.digital_output_channels = {}
-        self.toggled_pins = set()
+        self.toggled_pins = {}
 
     def configure_digital_input_channel(self, channel_name):
         self.digital_input_channels[channel_name] = False
@@ -35,23 +35,35 @@ class MockDAQDevice:
         if channel_name not in self.digital_input_channels:
             raise ValueError(f"Channel '{channel_name}' is not configured for digital input.")
 
-        while True:
-            start_time = time.time()
+        start_time = time.time()
 
-            if channel_name in self.toggled_pins:
-                self.digital_input_channels[channel_name] = False
-                self.toggled_pins.remove(channel_name)
-                print(self.digital_input_channels[channel_name])
-            else:
-                self.digital_input_channels[channel_name] = True
-                self.toggled_pins.add(channel_name)
-                print(self.digital_input_channels[channel_name])
+        if channel_name in self.toggled_pins:
+            self.digital_input_channels[channel_name] = False
+            del self.toggled_pins[channel_name]
+        else:
+            self.digital_input_channels[channel_name] = True
+            self.toggled_pins[channel_name] = time.time()
 
-            elapsed_time = time.time() - start_time
-            print(elapsed_time-1)
-            if abs(elapsed_time - 1) > 1:
-                print(abs(elapsed_time - 1))
-                raise RuntimeError(f"Timing error: Elapsed time was {elapsed_time} seconds.")
+        elapsed_time = time.time() - start_time
+        
+        if abs(elapsed_time - 1) > 1:
+            raise RuntimeError(f"Timing error: Elapsed time was {elapsed_time} seconds.")
 
-            time.sleep(max(0, 1 - elapsed_time))
+        time.sleep(max(0, 1 - elapsed_time))
 
+    def toggled_pins_rate(self):
+        rates = {}
+        start_time = time.time()
+
+        for pin, toggle_time in self.toggled_pins.items():
+            elapsed_time = start_time - toggle_time
+            rates[pin] = 1 / elapsed_time
+
+        return rates
+    
+    def timing_accuracy(self, channel_name):
+        try:
+            self.toggle_digital_input_pin(channel_name)
+            return True
+        except RuntimeError:
+            return False
