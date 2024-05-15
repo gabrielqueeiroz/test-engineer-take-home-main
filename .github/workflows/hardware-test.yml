@@ -20,7 +20,9 @@ jobs:
         python-version: '3.10.12'
 
     - name: Install dependencies
-      run: pip install -r hardware/requirements.txt
+      run: pip install -r requirements.txt
+      working-directory: hardware
 
     - name: Run tests
-      run: python -m unittest hardware/TestMockDAQDevice.py
+      run: python -m unittest TestMockDAQDevice
+      working-directory: hardware
