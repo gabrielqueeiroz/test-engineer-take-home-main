@@ -1,0 +1,5 @@
+deprecation==2.1.0
+hightime==0.2.2
+nidaqmx==0.9.0
+numpy==1.26.4
+packaging==24.0

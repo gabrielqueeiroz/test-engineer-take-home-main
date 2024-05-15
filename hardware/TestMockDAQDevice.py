@@ -22,7 +22,7 @@ class TestMockDAQDevice(unittest.TestCase):
             self.mock_daq.write_digital_pin(self.failure_pin, True)
 
     def test_toggle_rate_of_digital_pin(self):
-        self.mock_daq.configure_digital_input_channel("Iput0")
+        self.mock_daq.configure_digital_input_channel("Input0")
 
         self.mock_daq.toggle_digital_input_pin("Input0")
 
