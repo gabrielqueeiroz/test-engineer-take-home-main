@@ -1,0 +1,61 @@
+name: Run Cypress Tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  cypress-tests:
+    runs-on: ubuntu-latest
+
+    services:
+      docker:
+        image: docker:19.03.12
+        options: --privileged
+        ports:
+          - 8000:8000
+          - 3000:3000
+        volumes:
+          - /var/run/docker.sock:/var/run/docker.sock
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+
+    - name: Set up Docker Compose
+      run: sudo apt-get update && sudo apt-get install docker-compose -y
+
+    - name: Build and start services
+      run: docker-compose up -d --build
+      working-directory: software
+
+    - name: Wait for services to be ready
+      run: |
+        echo "Waiting for backend to be ready..."
+        until curl -s http://localhost:8000 > /dev/null; do
+          echo "Waiting for backend..."
+          sleep 5
+        done
+        echo "Backend is ready!"
+
+        echo "Waiting for frontend to be ready..."
+        until curl -s http://localhost:3000 > /dev/null; do
+          echo "Waiting for frontend..."
+          sleep 5
+        done
+        echo "Frontend is ready!"
+
+    - name: Install Cypress
+      run: npm install cypress
+      working-directory: software/cypress
+
+    - name: Run Cypress tests
+      run: npx cypress run
+      working-directory: software/cypress
